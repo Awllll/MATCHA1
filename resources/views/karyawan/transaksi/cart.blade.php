@@ -1,66 +1,46 @@
-@extends('layout.karyawan')
+<div>
+    <h3>Keranjang</h3>
 
-@section('content')
-<h1>Keranjang</h1>
+    @if(count($cart) == 0)
+        <p>Keranjang kosong</p>
+    @else
+        <ul style="list-style:none; padding:0;">
+            @foreach($cart as $index => $item)
+                <li style="margin-bottom:10px; border-bottom:1px solid #ddd; padding-bottom:5px;">
+                    <strong>{{ $item['nama'] }}</strong>
+                    <div>Qty: {{ $item['qty'] }}</div>
+                    <div>Harga: Rp {{ number_format($item['harga']) }}</div>
 
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
-@if(session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
-
-@if(count($cart) > 0)
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Produk</th>
-                <th>Ukuran</th>
-                <th>Kemanisan</th>
-                <th>Topping</th>
-                <th>Qty</th>
-                <th>Harga</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($cart as $id => $item)
-            <tr>
-                <td>{{ $item['nama'] }}</td>
-                <td>{{ $item['ukuran'] ?? '-' }}</td>
-                <td>{{ $item['kemanisan'] ?? '-' }}</td>
-                <td>
-                    @if(!empty($item['topping']))
-                        @php
-                            $toppingNames = \App\Models\Topping::whereIn('id', $item['topping'])->pluck('nama')->toArray();
-                        @endphp
-                        {{ implode(', ', $toppingNames) }}
-                    @else
-                        -
+                    @if(($item['tipe'] ?? '') == 'personalisasi')
+                        <div>Ukuran: {{ $item['ukuran'] ?? '-' }}</div>
+                        <div>Kemanisan: {{ $item['kemanisan'] ?? '-' }}</div>
+                        <div>Topping: {{ implode(', ', $item['topping'] ?? []) }}</div>
                     @endif
-                </td>
-                <td>{{ $item['qty'] }}</td>
-                <td>Rp {{ number_format($item['harga']) }}</td>
-                <td>
-                    <form action="{{ route('cart.remove', $id) }}" method="POST" onsubmit="return confirm('Hapus item?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
-                    </form>
-                </td>
-            </tr>
+
+                    <div style="margin-top:5px;">
+                        <a href="{{ route('kasir.qty.minus', $index) }}" class="btn btn-sm btn-secondary">-</a>
+                        <a href="{{ route('kasir.qty.plus', $index) }}" class="btn btn-sm btn-secondary">+</a>
+                    </div>
+                </li>
             @endforeach
-        </tbody>
-    </table>
+        </ul>
 
-    <form action="{{ route('cart.checkout') }}" method="POST">
-        @csrf
-        <button type="submit" class="btn btn-primary">Checkout</button>
-    </form>
-@else
-    <p>Keranjang kosong.</p>
-@endif
+        @php
+            $total = 0;
+            foreach($cart as $item){
+                $total += ($item['harga'] ?? 0) * ($item['qty'] ?? 1);
+            }
+        @endphp
 
-<a href="{{ route('karyawan.dashboard') }}" class="btn btn-secondary mt-3">Kembali ke Menu</a>
-@endsection
+        <p><strong>Total: Rp {{ number_format($total) }}</strong></p>
+
+        <form action="{{ route('kasir.checkout.confirm') }}" method="POST">
+            @csrf
+            <div class="mb-2">
+                <label>Nama Pembeli:</label>
+                <input type="text" name="nama_pembeli" class="form-control" required placeholder="Masukkan nama pembeli">
+            </div>
+            <button type="submit" class="btn btn-success w-100 mt-2">Lanjut ke Pembayaran</button>
+        </form>
+    @endif
+</div>

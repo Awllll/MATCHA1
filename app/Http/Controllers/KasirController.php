@@ -7,94 +7,113 @@ use App\Models\Produk;
 use App\Models\Ukuran;
 use App\Models\TingkatKemanisan;
 use App\Models\Topping;
-use App\Models\Pengguna;
 use Illuminate\Support\Facades\Auth;
 
 class KasirController extends Controller
 {
     public function dashboard()
     {
-        // Ambil semua produk untuk ditampilkan di menu
         $produks = Produk::with('kategori')->get();
         $pengguna = Auth::user();
-
         return view('karyawan.dashboard', compact('produks', 'pengguna'));
     }
 
     public function makanan()
     {
-        $makanan = Produk::whereHas('kategori', function($q) {
-            $q->where('nama', 'makanan');
-        })->get();
-
-        return view('karyawan.menu.makanan', [
-            'title' => 'Menu Makanan',
-            'menus' => $makanan
-        ]);
+        $makanan = Produk::whereHas('kategori', fn($q) => $q->where('nama', 'makanan'))->get();
+        return view('karyawan.menu.makanan', ['title' => 'Menu Makanan', 'menus' => $makanan]);
     }
 
     public function minuman()
     {
-        $minuman = Produk::whereHas('kategori', function($q) {
-            $q->where('nama', 'minuman');
-        })->get();
-
-        return view('karyawan.menu.minuman', [
-            'title' => 'Menu Minuman',
-            'menus' => $minuman
-        ]);
+        $minuman = Produk::whereHas('kategori', fn($q) => $q->where('nama', 'minuman'))->get();
+        return view('karyawan.menu.minuman', ['title' => 'Menu Minuman', 'menus' => $minuman]);
     }
 
-    public function addToCart(Request $request, Produk $produk)
+    // Form personalisasi minuman
+    public function personalisasiForm($id)
     {
+        $produk = Produk::findOrFail($id);
+        $ukuran = Ukuran::all();
+        $kemanisan = TingkatKemanisan::all();
+        $topping = Topping::all();
+
+        return view('karyawan.personalisasi.form', compact('produk','ukuran','kemanisan','topping'));
+    }
+
+    // Tambah ke cart (langsung atau personalisasi)
+    public function addToCart(Request $request, $id)
+    {
+        $produk = Produk::with('kategori')->findOrFail($id);
         $cart = session()->get('cart', []);
 
-        $itemId = $produk->id;
+        // Jika kategori bukan minuman → langsung tambah ke cart biasa
+        if($produk->kategori->nama != 'minuman' || !$request->has('ukuran_id')){
+            $cart[] = [
+                'id' => $produk->id,
+                'nama' => $produk->nama,
+                'harga' => $produk->harga,
+                'qty' => 1,
+                'tipe' => 'biasa',
+            ];
+            session()->put('cart', $cart);
+            return back()->with('success', 'Produk berhasil ditambahkan ke keranjang!');
+        }
 
-        $cart[$itemId] = [
-            'produk_id' => $produk->id,
-            'nama'      => $produk->nama,
-            'harga'     => $produk->harga,
-            'qty'       => $request->qty ?? 1,
-            'ukuran'    => $request->ukuran ?? null,
-            'kemanisan' => $request->kemanisan ?? null,
-            'topping'   => $request->topping ?? [],
+        // Jika minuman → ambil data personalisasi
+        $ukuran = Ukuran::find($request->ukuran_id);
+        $kemanisan = TingkatKemanisan::find($request->kemanisan_id);
+        $topping_ids = $request->topping ?? [];
+        $topping = Topping::whereIn('id', $topping_ids)->get();
+
+        $total = $produk->harga + ($ukuran->harga_tambahan ?? 0);
+        foreach($topping as $top) $total += $top->harga;
+
+        $cart[] = [
+            'id' => $produk->id,
+            'nama' => $produk->nama,
+            'tipe' => 'personalisasi',
+            'harga' => $total,
+            'qty' => 1,
+            'ukuran_id' => $ukuran->id ?? null,
+            'kemanisan_id' => $kemanisan->id ?? null,
+            'topping_id' => $topping_ids,
+            'ukuran' => $ukuran->nama ?? null,
+            'kemanisan' => $kemanisan->nama ?? null,
+            'topping' => $topping->pluck('nama')->toArray(),
         ];
 
-        session(['cart' => $cart]);
-
-        return redirect()->back()->with('success', 'Menu ditambahkan ke keranjang');
+        session()->put('cart', $cart);
+        return back()->with('success', 'Minuman berhasil ditambahkan ke keranjang dengan personalisasi!');
     }
 
+    // Tambah qty
+    public function cartPlus($key)
+    {
+        $cart = session()->get('cart', []);
+        if(isset($cart[$key])) $cart[$key]['qty']++;
+        session()->put('cart', $cart);
+        return back();
+    }
+
+    // Kurangi qty
+    public function cartMinus($key)
+    {
+        $cart = session()->get('cart', []);
+        if(isset($cart[$key])){
+            $cart[$key]['qty']--;
+            if($cart[$key]['qty'] <= 0) unset($cart[$key]);
+        }
+        session()->put('cart', $cart);
+        return back();
+    }
+
+    // Lihat keranjang
     public function cart()
     {
         $cart = session()->get('cart', []);
-        return view('karyawan.transaksi.cart', compact('cart'));
+        $total = 0;
+        foreach($cart as $item) $total += ($item['harga'] ?? 0) * ($item['qty'] ?? 1);
+        return view('karyawan.transaksi.cart', compact('cart', 'total'));
     }
-
-    public function removeFromCart($id)
-    {
-        $cart = session()->get('cart', []);
-        if(isset($cart[$id])){
-            unset($cart[$id]);
-            session(['cart' => $cart]);
-        }
-        return redirect()->back()->with('success', 'Item dihapus dari keranjang');
-    }
-
-    public function checkout(Request $request)
-    {
-        $cart = session()->get('cart', []);
-
-        if(empty($cart)){
-            return redirect()->back()->with('error', 'Keranjang kosong');
-        }
-
-        // Simpan ke database transaksi & detail transaksi
-        // (kode insert ke transaksi, detail_transaksi, detail_transaksi_topping nanti)
-        session()->forget('cart');
-
-        return redirect()->route('karyawan.dashboard')->with('success', 'Transaksi berhasil');
-    }
-
 }

@@ -101,7 +101,6 @@ class ProdukController extends Controller
             $data['gambar'] = 'uploads/produk/' . $filename;
         }
 
-
         $produk->update($data);
 
         return redirect()->route('produk.index')

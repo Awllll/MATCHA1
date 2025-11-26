@@ -36,6 +36,9 @@ class AuthController extends Controller
                 return redirect()->route('karyawan.dashboard');
             }
 
+            session()->forget('cart');
+            session()->forget('checkout_data');
+
             Auth::logout();
             return back()->with('error', 'Role tidak valid');
         }
