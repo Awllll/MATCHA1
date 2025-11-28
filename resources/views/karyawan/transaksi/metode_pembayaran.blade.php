@@ -19,9 +19,13 @@
 
     <select name="metode_pembayaran_id" class="form-control mb-2" required>
         <option value="">-- Pilih Metode Pembayaran --</option>
-        <option value="1">Cash</option>
-        <option value="2">QRIS</option>
+        @foreach($metode as $m)
+            <option value="{{ $m->id }}">{{ $m->nama }}</option>
+        @endforeach
     </select>
+
+    @error('metode_pembayaran_id')
+    <div class="text-danger">{{ $message }}</div> @enderror
 
     <button type="submit" class="btn btn-success">Bayar</button>
 </form>

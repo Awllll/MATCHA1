@@ -23,7 +23,12 @@
             <li style="margin:10px 0;"><a href="{{ route('karyawan.dashboard') }}">Dashboard</a></li>
             <li style="margin:10px 0;"><a href="{{ route('menu.makanan') }}">Makanan</a></li>
             <li style="margin:10px 0;"><a href="{{ route('menu.minuman') }}">Minuman</a></li>
-            <li style="margin:10px 0;"><a href="{{ route('logout') }}">Logout</a></li>
+            <li style="margin:10px 0;">
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" style="background:none; border:none; padding:0; color:red; cursor:pointer;">Logout</button>
+                </form>
+            </li>
         </ul>
     </aside>
 

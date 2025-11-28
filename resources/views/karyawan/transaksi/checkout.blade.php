@@ -1,4 +1,4 @@
-@extends('layout.karyawan')
+@extends('layout.full')
 
 @section('content')
 <h3>Checkout</h3>

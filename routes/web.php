@@ -18,7 +18,7 @@ Route::get('/', function () {
 Route::get('/login-admin', [AuthController::class, 'loginAdmin'])->name('login.admin');
 Route::get('/login-karyawan', [AuthController::class, 'loginKaryawan'])->name('login.karyawan');
 Route::post('/login', [AuthController::class, 'loginProcess'])->name('login.process');
-Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/admin/dashboard', function () {
     return view('admin.dashboard');})->name('admin.dashboard');
 
@@ -29,7 +29,6 @@ Route::get('kasir/personalisasi/{id}', [KasirController::class, 'personalisasiFo
 // Tambah ke cart (makanan biasa & minuman personalisasi)
 Route::post('kasir/add-to-cart/{id}', [KasirController::class, 'addToCart'])->name('kasir.addToCart');
 
-
 Route::get('/karyawan/dashboard', [KasirController::class,'dashboard'])->name('karyawan.dashboard');
 Route::get('/karyawan/menu/makanan', [KasirController::class,'makanan'])->name('menu.makanan');
 Route::get('/karyawan/menu/minuman', [KasirController::class,'minuman'])->name('menu.minuman');
@@ -38,8 +37,11 @@ Route::get('kasir/cart/plus/{key}', [KasirController::class,'cartPlus'])->name('
 Route::get('kasir/cart/minus/{key}', [KasirController::class,'cartMinus'])->name('kasir.qty.minus');
 
 Route::get('kasir/checkout/form', [TransaksiController::class,'checkoutForm'])->name('kasir.checkout.form');
-Route::post('kasir/checkout/confirm', [TransaksiController::class,'confirmPayment'])->name('kasir.checkout.confirm');
 Route::post('kasir/checkout', [TransaksiController::class,'checkout'])->name('kasir.checkout');
+Route::post('kasir/checkout/confirm', [TransaksiController::class,'confirmPayment'])->name('kasir.checkout.confirm');
+Route::get('kasir/checkout/metode', [TransaksiController::class,'metodePembayaran'])->name('kasir.checkout.metode');
+
+Route::get('/kasir/transaksi/{id}', [TransaksiController::class, 'struk'])->name('kasir.transaksi.struk');
 
 Route::get('transaksi', [TransaksiController::class, 'index'])->name('admin.transaksi.index');
 Route::get('transaksi/{id}', [TransaksiController::class, 'show'])->name('admin.transaksi.show');

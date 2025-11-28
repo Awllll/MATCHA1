@@ -30,7 +30,6 @@ class KasirController extends Controller
         return view('karyawan.menu.minuman', ['title' => 'Menu Minuman', 'menus' => $minuman]);
     }
 
-    // Form personalisasi minuman
     public function personalisasiForm($id)
     {
         $produk = Produk::findOrFail($id);
@@ -41,26 +40,36 @@ class KasirController extends Controller
         return view('karyawan.personalisasi.form', compact('produk','ukuran','kemanisan','topping'));
     }
 
-    // Tambah ke cart (langsung atau personalisasi)
     public function addToCart(Request $request, $id)
     {
         $produk = Produk::with('kategori')->findOrFail($id);
         $cart = session()->get('cart', []);
 
-        // Jika kategori bukan minuman → langsung tambah ke cart biasa
-        if($produk->kategori->nama != 'minuman' || !$request->has('ukuran_id')){
-            $cart[] = [
-                'id' => $produk->id,
-                'nama' => $produk->nama,
-                'harga' => $produk->harga,
-                'qty' => 1,
-                'tipe' => 'biasa',
-            ];
+        if(strtolower($produk->kategori->nama) != 'minuman' || !$request->has('ukuran_id')){
+            $found = false;
+
+            foreach($cart as $key => $item){
+                if($item['id'] == $produk->id && $item['tipe'] == 'biasa'){
+                    $cart[$key]['qty']++;
+                    $found = true;
+                    break;
+                }
+            }
+
+            if(!$found){
+                $cart[] = [
+                    'id' => $produk->id,
+                    'nama' => $produk->nama,
+                    'harga' => $produk->harga,
+                    'qty' => 1,
+                    'tipe' => 'biasa',
+                ];
+            }
+
             session()->put('cart', $cart);
             return back()->with('success', 'Produk berhasil ditambahkan ke keranjang!');
         }
 
-        // Jika minuman → ambil data personalisasi
         $ukuran = Ukuran::find($request->ukuran_id);
         $kemanisan = TingkatKemanisan::find($request->kemanisan_id);
         $topping_ids = $request->topping ?? [];
@@ -69,25 +78,41 @@ class KasirController extends Controller
         $total = $produk->harga + ($ukuran->harga_tambahan ?? 0);
         foreach($topping as $top) $total += $top->harga;
 
-        $cart[] = [
-            'id' => $produk->id,
-            'nama' => $produk->nama,
-            'tipe' => 'personalisasi',
-            'harga' => $total,
-            'qty' => 1,
-            'ukuran_id' => $ukuran->id ?? null,
-            'kemanisan_id' => $kemanisan->id ?? null,
-            'topping_id' => $topping_ids,
-            'ukuran' => $ukuran->nama ?? null,
-            'kemanisan' => $kemanisan->nama ?? null,
-            'topping' => $topping->pluck('nama')->toArray(),
-        ];
+        $found = false;
+        foreach($cart as $key => $item){
+            if(
+                $item['id'] == $produk->id &&
+                $item['tipe'] == 'personalisasi' &&
+                $item['ukuran_id'] == $ukuran->id &&
+                $item['kemanisan_id'] == $kemanisan->id &&
+                $item['topping_id'] == $topping_ids
+            ){
+                $cart[$key]['qty']++;
+                $found = true;
+                break;
+            }
+        }
+
+        if(!$found){
+            $cart[] = [
+                'id' => $produk->id,
+                'nama' => $produk->nama,
+                'tipe' => 'personalisasi',
+                'harga' => $total,
+                'qty' => 1,
+                'ukuran_id' => $ukuran->id ?? null,
+                'kemanisan_id' => $kemanisan->id ?? null,
+                'topping_id' => $topping_ids,
+                'ukuran' => $ukuran->nama ?? null,
+                'kemanisan' => $kemanisan->nama ?? null,
+                'topping' => $topping->pluck('nama')->toArray(),
+            ];
+        }
 
         session()->put('cart', $cart);
         return back()->with('success', 'Minuman berhasil ditambahkan ke keranjang dengan personalisasi!');
     }
 
-    // Tambah qty
     public function cartPlus($key)
     {
         $cart = session()->get('cart', []);
@@ -96,7 +121,6 @@ class KasirController extends Controller
         return back();
     }
 
-    // Kurangi qty
     public function cartMinus($key)
     {
         $cart = session()->get('cart', []);
@@ -108,7 +132,6 @@ class KasirController extends Controller
         return back();
     }
 
-    // Lihat keranjang
     public function cart()
     {
         $cart = session()->get('cart', []);
