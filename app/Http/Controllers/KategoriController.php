@@ -2,22 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Kategori;
+use Illuminate\Http\Request;
 
 class KategoriController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar kategori.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $kategoris = Kategori::all();
+        $query = Kategori::query();
+
+        // Fitur Pencarian
+        if ($request->has('search')) {
+            $query->where('nama_kategori', 'like', "%{$request->search}%");
+        }
+
+        // Ambil data terbaru
+        $kategoris = $query->latest()->get();
+
         return view('admin.kategori.index', compact('kategoris'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form tambah kategori.
      */
     public function create()
     {
@@ -25,55 +34,68 @@ class KategoriController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data kategori baru.
      */
     public function store(Request $request)
     {
+        // Validasi
         $request->validate([
-            'nama' => 'required|string|max:255|unique:kategori,nama',
+            // Pastikan nama tabel 'kategoris' dan kolom 'nama_kategori' sesuai migrasi
+            'nama_kategori' => 'required|string|max:255|unique:kategoris,nama_kategori',
+            'deskripsi'     => 'nullable|string',
         ]);
 
-        Kategori::create($request->only('nama'));
+        // Simpan ke Database
+        Kategori::create([
+            'nama_kategori' => $request->nama_kategori,
+            'deskripsi'     => $request->deskripsi,
+        ]);
 
-        return redirect()->route('kategori.index')->with('success','Kategori berhasil ditambahkan.');
+        // Redirect ke route admin
+        return redirect()->route('admin.kategori.index')
+            ->with('success', 'Kategori berhasil ditambahkan.');
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan form edit kategori.
      */
-    public function show(string $id)
+    public function edit(string $id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Kategori $kategori)
-    {
+        $kategori = Kategori::findOrFail($id);
         return view('admin.kategori.edit', compact('kategori'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update data kategori.
      */
-    public function update(Request $request, Kategori $kategori)
+    public function update(Request $request, string $id)
     {
+        $kategori = Kategori::findOrFail($id);
+
         $request->validate([
-            'nama' => 'required|string|max:255|unique:kategori,nama,' . $kategori->id,
+            // Validasi unique kecuali ID ini sendiri
+            'nama_kategori' => 'required|string|max:255|unique:kategoris,nama_kategori,' . $id,
+            'deskripsi'     => 'nullable|string',
         ]);
 
-        $kategori->update($request->only('nama'));
+        $kategori->update([
+            'nama_kategori' => $request->nama_kategori,
+            'deskripsi'     => $request->deskripsi,
+        ]);
 
-        return redirect()->route('kategori.index')->with('success','Kategori berhasil diupdate.');
+        return redirect()->route('admin.kategori.index')
+            ->with('success', 'Kategori berhasil diperbarui.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Hapus kategori.
      */
-    public function destroy(Kategori $kategori)
+    public function destroy(string $id)
     {
+        $kategori = Kategori::findOrFail($id);
         $kategori->delete();
-        return redirect()->route('kategori.index')->with('success','Kategori berhasil dihapus.');
+
+        return redirect()->route('admin.kategori.index')
+            ->with('success', 'Kategori berhasil dihapus.');
     }
 }

@@ -1,55 +1,66 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProdukController;
+use App\Http\Controllers\KategoriController; // <--- INI WAJIB DITAMBAHKAN
 use App\Http\Controllers\ToppingController;
-use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\UkuranController;
+use App\Http\Controllers\JenisSusuController;
+use App\Http\Controllers\KepekatanMatchaController;
 use App\Http\Controllers\TingkatKemanisanController;
-use App\Http\Controllers\KasirController;
-use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\EsBatuController;
+use App\Models\Produk;
 
+// ====================================================
+// 1. HALAMAN PUBLIK (Landing Page)
+// ====================================================
 Route::get('/', function () {
-    return view('home');
+    try {
+        $produk = Produk::all();
+    } catch (\Exception $e) {
+        $produk = [];
+    }
+    return view('welcome', compact('produk'));
 });
 
-Route::get('/login-admin', [AuthController::class, 'loginAdmin'])->name('login.admin');
-Route::get('/login-karyawan', [AuthController::class, 'loginKaryawan'])->name('login.karyawan');
+// ====================================================
+// 2. HALAMAN LOGIN
+// ====================================================
+Route::get('/login', [AuthController::class, 'loginAdmin'])->name('login');
 Route::post('/login', [AuthController::class, 'loginProcess'])->name('login.process');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::get('/admin/dashboard', function () {
-    return view('admin.dashboard');})->name('admin.dashboard');
 
 
-// Form personalisasi minuman
-Route::get('kasir/personalisasi/{id}', [KasirController::class, 'personalisasiForm'])->name('kasir.personalisasi.form');
+// ====================================================
+// 3. HALAMAN ADMIN & KARYAWAN
+// ====================================================
+Route::middleware(['auth'])->group(function () {
 
-// Tambah ke cart (makanan biasa & minuman personalisasi)
-Route::post('kasir/add-to-cart/{id}', [KasirController::class, 'addToCart'])->name('kasir.addToCart');
+    // --- AREA ADMIN ---
+    Route::get('/admin/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('admin.dashboard');
 
-Route::get('/karyawan/dashboard', [KasirController::class,'dashboard'])->name('karyawan.dashboard');
-Route::get('/karyawan/menu/makanan', [KasirController::class,'makanan'])->name('menu.makanan');
-Route::get('/karyawan/menu/minuman', [KasirController::class,'minuman'])->name('menu.minuman');
+    Route::get('/admin/transaksi/detail', function () {
+        return view('admin.transaksi.detail');
+    })->name('admin.transaksi.detail');
 
-Route::get('kasir/cart/plus/{key}', [KasirController::class,'cartPlus'])->name('kasir.qty.plus');
-Route::get('kasir/cart/minus/{key}', [KasirController::class,'cartMinus'])->name('kasir.qty.minus');
+    Route::resource('admin/users', UserController::class)->names('admin.users');
+    Route::resource('admin/produk', ProdukController::class)->names('admin.produk');
+    Route::resource('admin/kategori', KategoriController::class)->names('admin.kategori');
+    Route::resource('admin/topping', ToppingController::class)->names('admin.topping');
+    Route::resource('admin/ukuran', UkuranController::class)->names('admin.ukuran');
+    Route::resource('admin/jenis-susu', JenisSusuController::class)->names('admin.jenis_susu');
+    Route::resource('admin/kepekatan', KepekatanMatchaController::class)->names('admin.kepekatan');
+    Route::resource('admin/tingkat-kemanisan', TingkatKemanisanController::class)->names('admin.tingkat_kemanisan');
+    Route::resource('admin/es-batu', EsBatuController::class)->names('admin.es_batu');
 
-Route::get('kasir/checkout/form', [TransaksiController::class,'checkoutForm'])->name('kasir.checkout.form');
-Route::post('kasir/checkout', [TransaksiController::class,'checkout'])->name('kasir.checkout');
-Route::post('kasir/checkout/confirm', [TransaksiController::class,'confirmPayment'])->name('kasir.checkout.confirm');
-Route::get('kasir/checkout/metode', [TransaksiController::class,'metodePembayaran'])->name('kasir.checkout.metode');
+    // --- AREA KARYAWAN ---
 
-Route::get('/kasir/transaksi/{id}', [TransaksiController::class, 'struk'])->name('kasir.transaksi.struk');
+    Route::get('/karyawan/dashboard', function () {
+        return "Halo Karyawan! <form action='".route('logout')."' method='POST'><input type='hidden' name='_token' value='".csrf_token()."'><button type='submit'>Logout</button></form>";
+    })->name('karyawan.dashboard');
 
-Route::get('transaksi', [TransaksiController::class, 'index'])->name('admin.transaksi.index');
-Route::get('transaksi/{id}', [TransaksiController::class, 'show'])->name('admin.transaksi.show');
-Route::delete('transaksi/{id}', [TransaksiController::class, 'destroy'])->name('admin.transaksi.destroy');
-
-Route::resource('pengguna', PenggunaController::class);
-Route::resource('produk', ProdukController::class);
-Route::resource('topping', ToppingController::class);
-Route::resource('kategori', KategoriController::class);
-Route::resource('ukuran', UkuranController::class);
-Route::resource('tingkatkemanisan', TingkatKemanisanController::class);
+});

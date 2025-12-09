@@ -13,10 +13,23 @@ return new class extends Migration
     {
         Schema::create('transaksi', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pengguna_id')->constrained('pengguna');
-            $table->foreignId('metode_pembayaran_id')->constrained('metode_pembayaran');
-            $table->string('nama_pembeli')->nullable();
-            $table->integer('total_harga');
+
+            // 1. Relasi ke tabel Users (Kasir yang melayani)
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+
+            // 2. Data Transaksi
+            $table->string('kode_transaksi')->unique(); // Contoh: TRX-2023001
+            $table->string('nama_pembeli')->nullable(); // Nama customer (opsional)
+
+            // 3. Keuangan
+            // Gunakan decimal untuk harga agar lebih presisi daripada integer
+            $table->decimal('total_harga', 15, 2);
+
+            // 4. Metode Pembayaran & Status
+            // Ubah jadi string dulu agar tidak error jika tabel master belum ada
+            $table->string('metode_pembayaran')->default('tunai'); // tunai, qris, transfer
+            $table->string('status')->default('selesai'); // pending, selesai, batal
+
             $table->timestamps();
         });
     }

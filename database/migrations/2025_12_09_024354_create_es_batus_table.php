@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('topping', function (Blueprint $table) {
+        Schema::create('es_batus', function (Blueprint $table) {
             $table->id();
-            $table->string('nama');
-            $table->integer('harga');
+            $table->string('nama_es')->unique(); // Contoh: Normal Ice, Less Ice, No Ice
             $table->timestamps();
         });
     }
@@ -24,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('topping');
+        Schema::dropIfExists('es_batus');
     }
 };

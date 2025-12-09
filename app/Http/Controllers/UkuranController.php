@@ -2,84 +2,68 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Ukuran;
+use Illuminate\Http\Request;
 
 class UkuranController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $ukurans = Ukuran::all();
+        $query = Ukuran::query();
+
+        if ($request->has('search')) {
+            $query->where('nama_ukuran', 'like', "%{$request->search}%");
+        }
+
+        $ukurans = $query->latest()->get();
         return view('admin.ukuran.index', compact('ukurans'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('admin.ukuran.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'nama'           => 'required|string|max:255|unique:ukuran,nama',
-            'harga_tambahan' => 'required|integer|min:0',
+            'nama_ukuran'    => 'required|string|max:255|unique:ukurans,nama_ukuran',
+            'harga_tambahan' => 'required|numeric|min:0',
+            'stok'           => 'required|integer|min:0',
         ]);
 
-        Ukuran::create($request->only('nama', 'harga_tambahan'));
+        Ukuran::create($request->all());
 
-        return redirect()->route('ukuran.index')
-                         ->with('success', 'Ukuran berhasil ditambahkan.');
+        return redirect()->route('admin.ukuran.index')
+            ->with('success', 'Ukuran berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit($id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Ukuran $ukuran)
-    {
+        $ukuran = Ukuran::findOrFail($id);
         return view('admin.ukuran.edit', compact('ukuran'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Ukuran $ukuran)
+    public function update(Request $request, $id)
     {
+        $ukuran = Ukuran::findOrFail($id);
+
         $request->validate([
-            'nama'           => 'required|string|max:255|unique:ukuran,nama,' . $ukuran->id,
-            'harga_tambahan' => 'required|integer|min:0',
+            'nama_ukuran'    => 'required|string|max:255|unique:ukurans,nama_ukuran,' . $id,
+            'harga_tambahan' => 'required|numeric|min:0',
+            'stok'           => 'required|integer|min:0',
         ]);
 
-        $ukuran->update($request->only('nama', 'harga_tambahan'));
+        $ukuran->update($request->all());
 
-        return redirect()->route('ukuran.index')
-                         ->with('success', 'Ukuran berhasil diupdate.');
+        return redirect()->route('admin.ukuran.index')
+            ->with('success', 'Ukuran berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Ukuran $ukuran)
+    public function destroy($id)
     {
-        $ukuran->delete();
-
-        return redirect()->route('ukuran.index')
-                         ->with('success', 'Ukuran berhasil dihapus.');
+        Ukuran::findOrFail($id)->delete();
+        return redirect()->route('admin.ukuran.index')
+            ->with('success', 'Ukuran berhasil dihapus.');
     }
 }

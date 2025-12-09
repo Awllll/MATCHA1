@@ -2,125 +2,138 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Produk;
-use App\Models\Kategori;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-
 
 class ProdukController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar produk (Admin).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $produks = Produk::with('kategori')->get();
+        $query = Produk::query();
+
+        // Fitur Pencarian
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where('nama', 'like', "%{$search}%")
+                  ->orWhere('kategori', 'like', "%{$search}%");
+        }
+
+        // Ambil data terbaru
+        $produks = $query->latest()->get();
+
         return view('admin.produk.index', compact('produks'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form tambah produk.
      */
     public function create()
     {
-        $kategoris = Kategori::all();
+        // Kita gunakan array statis dulu karena belum ada tabel kategori khusus
+        // Nanti jika sudah buat tabel kategori, bisa diganti: Kategori::all();
+        $kategoris = ['Minuman', 'Makanan', 'Topping', 'Snack'];
+
         return view('admin.produk.create', compact('kategoris'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan produk baru.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'kategori_id' => 'required|exists:kategori,id',
-            'nama'        => 'required|string|max:255',
-            'harga'       => 'required|integer|min:0',
-            'stok'        => 'required|integer|min:0',
-            'deskripsi'   => 'nullable|string',
-            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'nama'      => 'required|string|max:255',
+            'kategori'  => 'required|string', // Sesuai tabel migration sebelumnya
+            'harga'     => 'required|numeric|min:0',
+            'stok'      => 'required|integer|min:0',
+            'status'    => 'required|in:tersedia,habis',
+            'deskripsi' => 'nullable|string',
+            'gambar'    => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $data = $request->only(['kategori_id','nama','harga','stok','deskripsi']);
+        $data = $request->all();
 
+        // Upload Gambar ke Storage (Lebih aman & standar Laravel)
         if ($request->hasFile('gambar')) {
-            $file = $request->file('gambar');
-            $filename = time().'_'.$file->getClientOriginalName();
-            $file->move(public_path('uploads/produk'), $filename);
-            $data['gambar'] = 'uploads/produk/' . $filename;
+            $path = $request->file('gambar')->store('produk_images', 'public');
+            $data['gambar'] = 'storage/' . $path;
         }
 
         Produk::create($data);
 
-        return redirect()->route('produk.index')
+        return redirect()->route('admin.produk.index')
             ->with('success', 'Produk berhasil ditambahkan.');
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan form edit produk.
      */
-    public function show(string $id)
+    public function edit($id)
     {
-        //
+        $produk = Produk::findOrFail($id);
+        $kategoris = ['Minuman', 'Makanan', 'Topping', 'Snack'];
+
+        return view('admin.produk.edit', compact('produk', 'kategoris'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Update data produk.
      */
-    public function edit(Produk $produk)
+    public function update(Request $request, $id)
     {
-        $kategoris = Kategori::all();
-        return view('admin.produk.edit', compact('produk','kategoris'));
-    }
+        $produk = Produk::findOrFail($id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Produk $produk)
-    {
         $request->validate([
-            'kategori_id' => 'required|exists:kategori,id',
-            'nama'        => 'required|string|max:255',
-            'harga'       => 'required|integer|min:0',
-            'stok'        => 'required|integer|min:0',
-            'deskripsi'   => 'nullable|string',
-            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'nama'      => 'required|string|max:255',
+            'kategori'  => 'required|string',
+            'harga'     => 'required|numeric|min:0',
+            'stok'      => 'required|integer|min:0',
+            'status'    => 'required|in:tersedia,habis',
+            'deskripsi' => 'nullable|string',
+            'gambar'    => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $data = $request->only(['kategori_id','nama','harga','stok','deskripsi']);
+        $data = $request->all();
 
+        // Cek Gambar Baru
         if ($request->hasFile('gambar')) {
-            if ($produk->gambar && file_exists(public_path($produk->gambar))) {
-                unlink(public_path($produk->gambar));
+            // Hapus gambar lama jika ada (opsional, agar hemat storage)
+            if ($produk->gambar) {
+                // Konversi path 'storage/...' kembali ke path disk asli untuk dihapus
+                $oldPath = str_replace('storage/', '', $produk->gambar);
+                Storage::disk('public')->delete($oldPath);
             }
 
-            $file = $request->file('gambar');
-            $filename = time().'_'.$file->getClientOriginalName();
-            $file->move(public_path('uploads/produk'), $filename);
-            $data['gambar'] = 'uploads/produk/' . $filename;
+            $path = $request->file('gambar')->store('produk_images', 'public');
+            $data['gambar'] = 'storage/' . $path;
         }
 
         $produk->update($data);
 
-        return redirect()->route('produk.index')
-            ->with('success', 'Produk berhasil diupdate.');
-
+        return redirect()->route('admin.produk.index')
+            ->with('success', 'Produk berhasil diperbarui.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Hapus produk.
      */
-    public function destroy(Produk $produk)
+    public function destroy($id)
     {
-        // hapus file gambar jika ada
-        if ($produk->gambar && Storage::disk('public')->exists($produk->gambar)) {
-            Storage::disk('public')->delete($produk->gambar);
+        $produk = Produk::findOrFail($id);
+
+        // Hapus file gambar dari penyimpanan
+        if ($produk->gambar) {
+            $oldPath = str_replace('storage/', '', $produk->gambar);
+            Storage::disk('public')->delete($oldPath);
         }
 
         $produk->delete();
 
-        return redirect()->route('produk.index')
+        return redirect()->route('admin.produk.index')
             ->with('success', 'Produk berhasil dihapus.');
     }
 }

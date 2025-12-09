@@ -7,52 +7,49 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-     public function loginAdmin()
+    // Menampilkan Halaman Login
+    public function loginAdmin()
     {
-        return view('auth.login-admin');
+        return view('login');
     }
 
-    public function loginKaryawan()
+    // PROSES LOGIN UTAMA
+    public function loginProcess(Request $request)
     {
-        return view('auth.login-karyawan');
-    }
-
-     public function loginProcess(Request $request)
-    {
-        $request->validate([
-            'email' => 'required',
-            'password' => 'required'
+        $credentials = $request->validate([
+            'username' => ['required'],
+            'password' => ['required'],
         ]);
 
-        if (Auth::attempt($request->only('email', 'password'))) {
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
 
             $user = Auth::user();
 
-            if ($user->role === 'owner') {
-                return redirect()->route('admin.dashboard');
+            // CEK JABATAN & ARAHKAN
+            if ($user->role === 'admin') {
+                return redirect()->intended('admin/dashboard');
             }
 
             if ($user->role === 'karyawan') {
-                return redirect()->route('karyawan.dashboard');
+                return redirect()->intended('karyawan/dashboard');
             }
 
-            session()->forget('cart');
-            session()->forget('checkout_data');
-
+            // Jika role aneh, tendang keluar
             Auth::logout();
-            return back()->with('error', 'Role tidak valid');
+            return back()->withErrors(['username' => 'Akun tidak valid.']);
         }
 
-        return back()->with('error', 'Email atau password salah');
+        return back()->withErrors([
+            'username' => 'Username atau password salah.',
+        ]);
     }
 
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        return redirect('/');
+        return redirect('/login'); // Kembali ke halaman login umum
     }
 }

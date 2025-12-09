@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('detail_transaksi_topping', function (Blueprint $table) {
             $table->id();
             $table->foreignId('detail_transaksi_id')->constrained('detail_transaksi')->cascadeOnDelete();
-            $table->foreignId('topping_id')->constrained('topping');
+            $table->foreignId('topping_id')->constrained('toppings');
             $table->integer('harga_topping_saat_transaksi');
             $table->timestamps();
         });

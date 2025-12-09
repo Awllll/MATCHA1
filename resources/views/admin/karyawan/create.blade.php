@@ -1,45 +1,55 @@
-@extends('layout.admin')
-
-@section('title','Tambah Akun Karyawan')
+@extends('layouts.admin')
 
 @section('content')
-<h1 class="mb-4">Tambah Akun Karyawan</h1>
-
-@if (session('success'))
-    <div class="alert alert-success">
-        {{ session('success') }}
-    </div>
-@endif
-
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
-<form action="{{ route('pengguna.store') }}" method="POST">
-    @csrf
-
-    <div class="mb-3">
-        <label class="form-label">Nama</label>
-        <input type="text" name="nama" class="form-control" required>
+    <div class="flex items-center gap-4 mb-6">
+        <a href="{{ route('admin.users.index') }}" class="bg-white border border-gray-200 p-2 rounded-lg hover:bg-gray-50 transition text-gray-600">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        </a>
+        <h2 class="text-2xl font-bold text-gray-800">Tambah Karyawan</h2>
     </div>
 
-    <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input type="email" name="email" class="form-control" required>
-    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-2xl">
+        <form action="{{ route('admin.users.store') }}" method="POST">
+            @csrf
 
-    <div class="mb-3">
-        <label class="form-label">Password</label>
-        <input type="password" name="password" class="form-control" required>
-    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Nama Lengkap</label>
+                    <input type="text" name="name" class="w-full px-4 py-2 border rounded-lg focus:ring-green-500" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                    <input type="text" name="username" class="w-full px-4 py-2 border rounded-lg focus:ring-green-500" required>
+                </div>
+            </div>
 
-    <button type="submit" class="btn btn-success">Simpan</button>
-    <a href="{{ route('pengguna.index') }}" class="btn btn-secondary">Kembali</a>
-</form>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" name="email" class="w-full px-4 py-2 border rounded-lg focus:ring-green-500" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">No. Telepon</label>
+                    <input type="text" name="no_telepon" class="w-full px-4 py-2 border rounded-lg focus:ring-green-500">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Status Akun</label>
+                <select name="status" class="w-full px-4 py-2 border rounded-lg focus:ring-green-500 bg-white">
+                    <option value="aktif">Aktif</option>
+                    <option value="nonaktif">Nonaktif</option>
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                <input type="password" name="password" class="w-full px-4 py-2 border rounded-lg focus:ring-green-500" required>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition">Simpan</button>
+            </div>
+        </form>
+    </div>
 @endsection

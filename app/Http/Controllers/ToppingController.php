@@ -2,83 +2,71 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Topping;
+use Illuminate\Http\Request;
 
 class ToppingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $toppings = Topping::all();
+        $query = Topping::query();
+
+        if ($request->has('search')) {
+            $query->where('nama_topping', 'like', "%{$request->search}%");
+        }
+
+        $toppings = $query->latest()->get();
         return view('admin.topping.index', compact('toppings'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('admin.topping.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
     public function store(Request $request)
     {
         $request->validate([
-            'nama'  => 'required|string|max:255',
-            'harga' => 'required|integer|min:0',
-            'stok'  => 'required|integer|min:0',
+            'nama_topping' => 'required|string|max:255|unique:toppings,nama_topping',
+            'harga'        => 'required|numeric|min:0',
+            'stok'         => 'required|integer|min:0',
+            'status'       => 'required|in:tersedia,habis',
         ]);
 
-        Topping::create($request->only('nama','harga','stok'));
+        Topping::create($request->all());
 
-        return redirect()->route('topping.index')->with('success','Topping berhasil ditambahkan.');
+        return redirect()->route('admin.topping.index')
+            ->with('success', 'Toping berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit($id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Topping $topping)
-    {
+        $topping = Topping::findOrFail($id);
         return view('admin.topping.edit', compact('topping'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Topping $topping)
+    public function update(Request $request, $id)
     {
+        $topping = Topping::findOrFail($id);
+
         $request->validate([
-            'nama'  => 'required|string|max:255',
-            'harga' => 'required|integer|min:0',
-            'stok'  => 'required|integer|min:0',
+            'nama_topping' => 'required|string|max:255|unique:toppings,nama_topping,' . $id,
+            'harga'        => 'required|numeric|min:0',
+            'stok'         => 'required|integer|min:0',
+            'status'       => 'required|in:tersedia,habis',
         ]);
 
-        $topping->update($request->only('nama','harga','stok'));
+        $topping->update($request->all());
 
-        return redirect()->route('topping.index')->with('success','Topping berhasil diupdate.');
+        return redirect()->route('admin.topping.index')
+            ->with('success', 'Toping berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Topping $topping)
+    public function destroy($id)
     {
-        $topping->delete();
-
-        return redirect()->route('topping.index')->with('success','Topping berhasil dihapus.');
+        Topping::findOrFail($id)->delete();
+        return redirect()->route('admin.topping.index')
+            ->with('success', 'Toping berhasil dihapus.');
     }
 }

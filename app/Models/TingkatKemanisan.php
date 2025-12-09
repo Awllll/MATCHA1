@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class TingkatKemanisan extends Model
 {
-    protected $table = 'tingkat_kemanisan'; 
-    protected $fillable = ['nama'];
+    use HasFactory;
 
-    public function detailTransaksi()
-    {
-        return $this->hasMany(DetailTransaksi::class);
-    }
+    protected $table = 'tingkat_kemanisans';
+
+    protected $fillable = [
+        'nama_tingkat',
+    ];
 }

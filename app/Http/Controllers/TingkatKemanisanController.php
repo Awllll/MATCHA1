@@ -2,83 +2,64 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\TingkatKemanisan;
+use Illuminate\Http\Request;
 
 class TingkatKemanisanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $tingkats = TingkatKemanisan::all();
-        return view('admin.tingkatkemanisan.index', compact('tingkats'));
+        $query = TingkatKemanisan::query();
+
+        if ($request->has('search')) {
+            $query->where('nama_tingkat', 'like', "%{$request->search}%");
+        }
+
+        $tingkat_kemanisans = $query->latest()->get();
+        return view('admin.tingkat_kemanisan.index', compact('tingkat_kemanisans'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        return view('admin.tingkatkemanisan.create');
+        return view('admin.tingkat_kemanisan.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'nama' => 'required|string|max:255|unique:tingkat_kemanisan,nama',
+            'nama_tingkat' => 'required|string|max:255|unique:tingkat_kemanisans,nama_tingkat',
         ]);
 
-        TingkatKemanisan::create($request->only('nama'));
+        TingkatKemanisan::create($request->all());
 
-        return redirect()->route('tingkatkemanisan.index')
-                         ->with('success', 'Tingkat kemanisan berhasil ditambahkan.');
+        return redirect()->route('admin.tingkat_kemanisan.index')
+            ->with('success', 'Tingkat kemanisan berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit($id)
     {
-        //
+        $tingkatKemanisan = TingkatKemanisan::findOrFail($id);
+        return view('admin.tingkat_kemanisan.edit', compact('tingkatKemanisan'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(TingkatKemanisan $tingkatkemanisan)
+    public function update(Request $request, $id)
     {
-        return view('admin.tingkatkemanisan.edit', compact('tingkatkemanisan'));
-    }
+        $tingkatKemanisan = TingkatKemanisan::findOrFail($id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, TingkatKemanisan $tingkatkemanisan)
-    {
         $request->validate([
-            'nama' => 'required|string|max:255|unique:tingkat_kemanisan,nama,' . $tingkatkemanisan->id,
+            'nama_tingkat' => 'required|string|max:255|unique:tingkat_kemanisans,nama_tingkat,' . $id,
         ]);
 
-        $tingkatkemanisan->update($request->only('nama'));
+        $tingkatKemanisan->update($request->all());
 
-        return redirect()->route('tingkatkemanisan.index')
-                         ->with('success', 'Tingkat kemanisan berhasil diupdate.');
+        return redirect()->route('admin.tingkat_kemanisan.index')
+            ->with('success', 'Tingkat kemanisan berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(TingkatKemanisan $tingkatkemanisan)
+    public function destroy($id)
     {
-        // $tingkat_kemanisan = TingkatKemanisan::findOrFail($id);
-        $tingkatkemanisan->delete();
-
-        return redirect()->route('tingkatkemanisan.index')
-                         ->with('success', 'Tingkat kemanisan berhasil dihapus.');
+        TingkatKemanisan::findOrFail($id)->delete();
+        return redirect()->route('admin.tingkat_kemanisan.index')
+            ->with('success', 'Tingkat kemanisan berhasil dihapus.');
     }
 }

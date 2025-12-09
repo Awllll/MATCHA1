@@ -4,8 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-
+use App\Models\TingkatKemanisan; 
 
 class TingkatKemanisanSeeder extends Seeder
 {
@@ -14,11 +13,25 @@ class TingkatKemanisanSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('tingkat_kemanisan')->insert([
-            ['nama' => 'Normal', 'created_at' => now(), 'updated_at' => now()],
-            ['nama' => 'Less Sugar', 'created_at' => now(), 'updated_at' => now()],
-            ['nama' => 'No Sugar', 'created_at' => now(), 'updated_at' => now()],
-            ['nama' => 'Extra Sugar', 'created_at' => now(), 'updated_at' => now()],
+
+        TingkatKemanisan::create([
+            'nama_tingkat' => 'Normal (100%)',
+        ]);
+
+        TingkatKemanisan::create([
+            'nama_tingkat' => 'Less Sugar (75%)',
+        ]);
+
+        TingkatKemanisan::create([
+            'nama_tingkat' => 'Half Sugar (50%)',
+        ]);
+
+        TingkatKemanisan::create([
+            'nama_tingkat' => 'Little Sugar (25%)',
+        ]);
+
+        TingkatKemanisan::create([
+            'nama_tingkat' => 'No Sugar (0%)',
         ]);
     }
 }

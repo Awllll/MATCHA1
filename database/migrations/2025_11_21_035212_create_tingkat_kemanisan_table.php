@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tingkat_kemanisan', function (Blueprint $table) {
+            Schema::create('tingkat_kemanisans', function (Blueprint $table) {
             $table->id();
-             $table->string('nama'); // Normal, Less Sugar, No Sugar
+            $table->string('nama_tingkat')->unique(); // Contoh: Normal (100%), Less Sugar (50%)
             $table->timestamps();
         });
     }

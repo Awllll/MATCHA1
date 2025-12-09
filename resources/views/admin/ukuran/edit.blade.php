@@ -1,27 +1,35 @@
-@extends('layout.admin')
-
-@section('title','Edit Ukuran')
+@extends('layouts.admin')
 
 @section('content')
-<div class="container mt-4">
-    <h1>Edit Ukuran</h1>
+    <div class="flex items-center gap-4 mb-6">
+        <a href="{{ route('admin.ukuran.index') }}" class="bg-white border p-2 rounded-lg hover:bg-gray-50"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg></a>
+        <h2 class="text-2xl font-bold text-gray-800">Edit Ukuran</h2>
+    </div>
 
-    <form action="{{ route('ukuran.update', $ukuran->id) }}" method="POST">
-        @csrf
-        @method('PUT')
+    <div class="bg-white rounded-xl shadow-sm border p-6 max-w-2xl">
+        <form action="{{ route('admin.ukuran.update', $ukuran->id) }}" method="POST">
+            @csrf @method('PUT')
 
-        <div class="mb-3">
-            <label class="form-label">Nama Ukuran</label>
-            <input type="text" name="nama" class="form-control" value="{{ $ukuran->nama }}" required>
-        </div>
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2">Nama Ukuran</label>
+                <input type="text" name="nama_ukuran" value="{{ $ukuran->nama_ukuran }}" class="w-full border rounded-lg p-2" required>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Harga Tambahan</label>
-            <input type="number" name="harga_tambahan" class="form-control" value="{{ $ukuran->harga_tambahan }}" min="0" required>
-        </div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Harga Tambahan (Rp)</label>
+                    <input type="number" name="harga_tambahan" value="{{ $ukuran->harga_tambahan }}" class="w-full border rounded-lg p-2" required>
+                </div>
 
-        <button type="submit" class="btn btn-success">Update</button>
-        <a href="{{ route('ukuran.index') }}" class="btn btn-secondary">Kembali</a>
-    </form>
-</div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Stok (Cup/Gelas)</label>
+                    <input type="number" name="stok" value="{{ $ukuran->stok }}" class="w-full border rounded-lg p-2" required>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">Update</button>
+            </div>
+        </form>
+    </div>
 @endsection

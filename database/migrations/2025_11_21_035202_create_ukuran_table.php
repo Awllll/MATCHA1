@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ukuran', function (Blueprint $table) {
+            Schema::create('ukurans', function (Blueprint $table) {
             $table->id();
-            $table->string('nama'); // Small, Medium, Large
+            $table->string('nama_ukuran')->unique();
+            $table->integer('harga_tambahan')->default(0);
+            $table->integer('stok')->default(0); 
             $table->timestamps();
         });
     }

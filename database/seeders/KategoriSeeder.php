@@ -4,8 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-
+use App\Models\Kategori; // Import Model
 
 class KategoriSeeder extends Seeder
 {
@@ -14,9 +13,27 @@ class KategoriSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('kategori')->insert([
-            ['nama' => 'Minuman', 'created_at' => now(), 'updated_at' => now()],
-            ['nama' => 'Makanan', 'created_at' => now(), 'updated_at' => now()],
+        // Gunakan Model Kategori agar otomatis masuk ke tabel 'kategoris'
+        // dan pastikan nama kolomnya 'nama_kategori'
+
+        Kategori::create([
+            'nama_kategori' => 'Minuman',
+            'deskripsi'     => 'Berbagai macam minuman panas dan dingin',
+        ]);
+
+        Kategori::create([
+            'nama_kategori' => 'Makanan',
+            'deskripsi'     => 'Menu makanan utama dan snack',
+        ]);
+
+        Kategori::create([
+            'nama_kategori' => 'Topping',
+            'deskripsi'     => 'Tambahan rasa untuk minuman',
+        ]);
+
+        Kategori::create([
+            'nama_kategori' => 'Dessert',
+            'deskripsi'     => 'Makanan penutup yang manis',
         ]);
     }
 }
