@@ -15,7 +15,9 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+
 
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition group">
             <div class="flex justify-between items-start">
@@ -29,6 +31,7 @@
             </div>
         </div>
 
+
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition group">
             <div class="flex justify-between items-start">
                 <div>
@@ -40,6 +43,7 @@
                 </div>
             </div>
         </div>
+
 
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition group">
             <div class="flex justify-between items-start">
@@ -53,19 +57,9 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition group">
-            <div class="flex justify-between items-start">
-                {{-- <div>
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Rata-rata Transaksi</p>
-                    <h3 class="text-2xl font-bold text-gray-800 mt-2 group-hover:text-orange-600 transition">Rp 57.860</h3>
-                </div> --}}
-                <div class="bg-orange-50 p-2.5 rounded-xl text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                </div>
-            </div>
-        </div>
     </div>
 
+    {{-- BAGIAN INI KALO MAU DI RUBAH BACKEND YAAA, YANG DI BAWAH NYA INI --}}
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 
         <div class="mb-6">
